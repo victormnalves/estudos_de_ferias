@@ -105,3 +105,19 @@ str_view(x, '^apple$') #vemos onde começa termina com 'apple'
 str_view(c('grey','gray'), 'gr(e|a)y') #palavras desta estrutura com e ou a
 ```
 
+```{r}
+## repetição
+x <- '1888 é o maior número em números romanos: MDCCCLXXXVIII'
+
+str_view(x, 'CC?')
+str_view(x, 'CC+')
+str_view(x, 'C[LX]+')
+str_view(x, 'C{2}')
+str_view(x, 'C{2,}')
+str_view(x, 'C{2,3}')
+```
+```{r}
+## agrupamento
+str_view(fruit, '(..)\\1', match = TRUE) #verifica onde há grupo de letras repetidos
+```
+
