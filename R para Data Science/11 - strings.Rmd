@@ -1,5 +1,5 @@
 ---
-title: "Strings com stringr"
+title: "Strings"
 output: html_notebook
 ---
 
@@ -66,5 +66,42 @@ x <- c('apple','eggplant','banana')
 
 str_sort(x, locale = 'en')
 str_sort(x, locale = 'haw') #observe como em hawaiano é diferente a ordenação
+```
+## Combinando padrões e expressões regulares
+
+```{r}
+#visualizando partes
+x <- c('apple','banana','pear')
+str_view(x, 'an') #veremos as strings em x que contém 'an'
+
+```
+```{r}
+#operador .
+str_view(x, '.a.') #veremos onde "a" está cercado por outros caracteres
+
+#verificando em torno de "."
+
+dot <- '\\.' #criando uma expressão para "\."
+writeLines(dot) #vendo a expressão, ela possui somente um "\"
+
+str_view(c('abc','a.c','bef'), 'a\\.c')
+
+x <- 'a\\b'
+writeLines(x) #vendo a expressão de fato
+
+str_view(x,'\\\\') #vendo onde há '\' na expressão
+```
+```{r}
+## âncoras
+x <- c('apple','banana','pear')
+str_view(x, '^a') #vemos onde há "a" no começo
+str_view(x, 'a$') #vemos onde há "a" no final
+
+x <- c('apple pie','apple', 'apple cake') 
+str_view(x, '^apple$') #vemos onde começa termina com 'apple'
+```
+```{r}
+## classes de caracteres e alternativas
+str_view(c('grey','gray'), 'gr(e|a)y') #palavras desta estrutura com e ou a
 ```
 
