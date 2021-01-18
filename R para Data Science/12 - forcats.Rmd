@@ -1,0 +1,133 @@
+---
+title: "Fatores com forcats"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(forcats)
+
+### criando um fator
+x1 <- c('Dec','Apr','Jan','Mar')
+x2 <- c('Dec','Apr','Jam','Mar') #é impossível corrigir erros de digitação e ordenar fatores em string
+
+month_levels <- c('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug',
+                  'Sep','Oct','Nov','Dec') #podemos criar um vetor com todas as possibilidades para corrigirmos erros de ordenação e digitação
+
+y1 <- factor(x1, levels = month_levels) #criamos um fator passando o vetor fator e o vetor "mãe"
+y1
+sort(y1)
+
+y2 <- factor(x2, levels = month_levels) #retornará NA em um valor não compatível com o vetor "mãe"
+y2
+
+f1 <- factor(x1, levels = unique(x1)) #adotará a ordem que foi realizada na primeira aparição dos dados
+f2 <- x1 %>% factor() %>% fct_inorder() #fatores com pipe
+
+levels(f2) #verificamos os níveis de um fator
+
+```
+
+## General Social Survey
+```{r}
+gss_cat
+gss_cat %>% count(race) #verificamos os níveis do fator race
+
+
+ggplot(gss_cat, aes(race)) + geom_bar() #ggplot deixa níveis sem valor de lado
+ggplot(gss_cat,aes(race)) + geom_bar() + scale_x_discrete(drop = FALSE) #forçamos a plotagem dos NAs
+
+```
+## Modificando a ordem dos fatores
+
+```{r}
+#verificando tempo tv por religião
+relig <- gss_cat %>% group_by(relig) %>% 
+  summarise(
+    age = mean(age, na.rm = TRUE), 
+    tvhours = mean(tvhours, na.rm = TRUE), n = n()
+  )
+#podemos reordenar os fatores com fct_reorder para o gráfico ficar melhor
+ggplot(relig, aes(tvhours, fct_reorder(relig, tvhours))) + geom_point()
+
+#recomenda-se passar os valores de alteração do fator para mutate()
+relig %>% mutate(relig = fct_reorder(relig, tvhours)) %>% 
+  ggplot(aes(tvhours, relig)) + geom_point()
+
+#verificando renda e idade
+rincome_summary <- gss_cat %>%
+  group_by(rincome) %>%
+  summarise(
+    age = mean(age, na.rm = TRUE),
+    tvhours = mean(tvhours, na.rm = TRUE),
+    n = n()
+  )
+#> `summarise()` ungrouping output (override with `.groups` argument)
+
+ggplot(rincome_summary, aes(age, fct_reorder(rincome, age))) + geom_point()
+
+#plotando casamento e idade reordenando pleos valores de y e x
+by_age <- gss_cat %>% 
+  filter(!is.na(age)) %>% #deixar de fora NAs para evitar erro matemático 
+  count(age, marital) %>%
+  group_by(age) %>% mutate(prop = n / sum(n))
+
+by_age
+
+ggplot(by_age, aes(age, prop, colour = marital)) +
+  geom_line(na.rm = TRUE)
+
+ggplot(by_age, aes(age, prop, colour = fct_reorder2(marital, age, prop))) +
+  geom_line() +
+  labs(colour = "marital")
+
+#plotando barras crescentes ccom fct_infreq (usando fct_rev() para reverter)
+gss_cat %>%
+  mutate(marital = marital %>% fct_infreq()  %>% fct_rev()) %>%
+  ggplot(aes(marital)) +
+    geom_bar()
+```
+## modificando níveis de fatores
+```{r}
+gss_cat %>% count(partyid)
+
+#atribuindo novos nomes aos fatores existentes
+(gss_cat %>%
+  mutate(partyid = fct_recode(partyid,
+    "Republican, strong"    = "Strong republican",
+    "Republican, weak"      = "Not str republican",
+    "Independent, near rep" = "Ind,near rep",
+    "Independent, near dem" = "Ind,near dem",
+    "Democrat, weak"        = "Not str democrat",
+    "Democrat, strong"      = "Strong democrat"
+  )) %>%
+  count(partyid))
+
+#se atribuirmos o mesmo nome a fatores diferentes, eles serão computados como sendo somente um fator
+(gss_cat %>%
+  mutate(partyid = fct_recode(partyid,
+    "Republican, strong"    = "Strong republican",
+    "Republican, weak"      = "Not str republican",
+    "Independent, near rep" = "Ind,near rep",
+    "Independent, near dem" = "Ind,near dem",
+    "Democrat, weak"        = "Not str democrat",
+    "Democrat, strong"      = "Strong democrat",
+    "Other"                 = "No answer",
+    "Other"                 = "Don't know",
+    "Other"                 = "Other party"
+  )) %>%
+  count(partyid))
+
+#podemos colocar vários fatores em um só fator
+(gss_cat %>%
+  mutate(partyid = fct_collapse(partyid,
+    other = c("No answer", "Don't know", "Other party"),
+    rep = c("Strong republican", "Not str republican"),
+    ind = c("Ind,near rep", "Independent", "Ind,near dem"),
+    dem = c("Not str democrat", "Strong democrat")
+  )) %>%
+  count(partyid))
+
+
+```
+
